@@ -20,6 +20,17 @@ W przypadku odkrycia przyczyna wystąpienia błędu bardzo
 proszę o zgłoszenie tego albo do mnie, albo do Sage.
 Wolimy przecież, by błędy nigdy się nie pojawiały.
 
+## Licencja
+
+Kod udostępniany jest na licencji GPL 3.0.
+Oznacza to, że można używać go bez ograniczeń
+pod warunkiem, że wraz z kodem rozprowadzana jest również
+licencja oraz że kod jest cały czas otwarty (open-source).
+
+Nie jest dozwolone wykorzystanie kodu we własnych rozwiązaniach,
+których kod źródłowy nie jest udostępniany publicznie,
+na licencji kompatybilnej z GPL 3.0.
+
 ## Wykrywane błędy
 
 Weryfikator pozwala wykryć następujące błędy:
