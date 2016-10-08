@@ -36,7 +36,7 @@ na licencji kompatybilnej z GPL 3.0.
 * ConnectionString
 * MinIdDw - `SprawdzWartNowychDostaw` wymaga podania minimalnego
   id, od którego ma zacząć sprawdzania. Baza DW nie ma klucza
-  po datach, więc upraszczamy radzimy sobie w ten sposób.
+  po datach, więc radzimy sobie w ten sposób.
   Jak nie podamy tego parametru - za każdym razem sprawdzi
   całą bazę.
 
