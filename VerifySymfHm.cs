@@ -1,6 +1,7 @@
 ﻿/*
 VerifySymfHm - weryfikator baz danych Sage Symfonia Handel
 Copyright (C) 2016, jaroslaw.czekalski@bonsoft.pl
+https://github.com/bonsoftpl/VerifySymfHm
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
