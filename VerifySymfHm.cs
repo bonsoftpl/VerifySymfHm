@@ -30,6 +30,7 @@ namespace VerifySymfHm
   {
     protected OdbcConnection m_conn;
     protected string m_sConnStr;
+    protected int m_idDwMin;
 
     public VerifySymfHm()
     {
@@ -37,6 +38,7 @@ namespace VerifySymfHm
       Console.WriteLine("VerifySymfHm, start " + DateTime.Now);
       m_sConnStr = Properties.Settings
                    .Default["ConnectionString"].ToString();
+      m_idDwMin = (int)(Properties.Settings.Default["MinIdDw"]);
       m_conn = new OdbcConnection(m_sConnStr);
       m_conn.Open();
     }
@@ -51,7 +53,7 @@ namespace VerifySymfHm
         "from dw " +
         "left join tw on dw.idtw = tw.id " +
         "left join xt on dw.magazyn = xt.id " +
-        "where dw.id > 500000 " + 
+        "where dw.id > " + m_idDwMin +
         "and round(dw.wartoscDoSp, 2) <> round(dw.wartoscSt, 2) " +
         "and round(dw.ilosc, 3) = round(dw.iloscpz, 3) " +
         "and round(dw.ilosc, 3) = round(dw.stan, 3) ";
