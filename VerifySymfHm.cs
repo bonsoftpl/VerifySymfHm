@@ -36,9 +36,9 @@ namespace VerifySymfHm
     {
       Console.WriteLine("VerifySymfHm, licensed with GNU GPL 3.0, (c) 2016 bonsoft.pl");
       Console.WriteLine("VerifySymfHm, start " + DateTime.Now);
-      m_sConnStr = Properties.Settings
-                   .Default["ConnectionString"].ToString();
-      m_idDwMin = (int)(Properties.Settings.Default["MinIdDw"]);
+      var seti = System.Configuration.ConfigurationManager.AppSettings;
+      m_sConnStr = seti["ConnectionString"].ToString();
+      m_idDwMin = Int32.Parse(seti["MinIdDw"]);
       m_conn = new OdbcConnection(m_sConnStr);
       m_conn.Open();
     }
@@ -46,6 +46,7 @@ namespace VerifySymfHm
     protected void SprawdzWartNowychDostaw()
     {
       var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = 60;
       cmd.CommandText = "select " +
         "dw.kod as kodDw, dw.data as data, tw.kod as kodTow " +
         ", wartoscDoSp, wartoscSt, ilosc, iloscpz, dw.stan " +
@@ -72,6 +73,7 @@ namespace VerifySymfHm
     protected void SprawdzCenyWydanZDostaw()
     {
       var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = 60;
       string sDataOd = DateTime.Now.Subtract(new TimeSpan(3, 0, 0, 0))
         .ToString("yyyy-MM-dd");
       cmd.CommandText = "select dw.kod as kodDw, mg.kod as kodWyd " +
