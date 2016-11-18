@@ -102,6 +102,36 @@ namespace VerifySymfHm
       cmd.Dispose();
     }
 
+    protected void SprawdzCzyMzMajaPw()
+    {
+      var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = 60;
+      string sDataOd = DateTime.Now
+        .Subtract(new TimeSpan(Int32.Parse(m_seti["DaysBack"]), 0, 0, 0))
+        .ToString("yyyy-MM-dd");
+      cmd.CommandText = "select mg.kod as kodMg, mg.data as data, " +
+        "mz.kod as kodTow, mz.id as idMz " +
+        "from mg " +
+        "left join mz on mz.super = mg.id " +
+        "left join pw on pw.typi = 37 and pw.idmg = mz.id " +
+        "where mg.data >= '" + sDataOd + "' " +
+        "and mz.id is not null and pw.id is null " +
+        // anulowane nas nie interesują
+        "and mg.subtypi <> 0 " +
+        // niektóre pozycje są naprawdę zerowe i ich się nie czepiamy
+        "and not ((mz.ilosc between - 0.0001 and 0.0001) " +
+        "         and (mz.cena between - 0.001 and 0.001)) ";
+      var rs = cmd.ExecuteReader();
+      //Console.WriteLine(cmd.CommandText);
+      while (rs.Read())
+      {
+        Console.WriteLine(String.Format("W dok. mag. {0} ({1}) " +
+          "brakuje pw do pozycji {2} (mz:{3}) ",
+          rs["kodMg"], rs["data"], rs["kodTow"], rs["idMz"]));
+      }
+      cmd.Dispose();
+    }
+
     public void Close()
     {
       m_conn.Close();
@@ -113,6 +143,7 @@ namespace VerifySymfHm
       var c = new VerifySymfHm();
       c.SprawdzWartNowychDostaw();
       c.SprawdzCenyWydanZDostaw();
+      c.SprawdzCzyMzMajaPw();
       c.Close();
     }
   }
