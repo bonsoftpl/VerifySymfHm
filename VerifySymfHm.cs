@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Configuration;
 using System.Data.Odbc;
 using System.Linq;
 using System.Text;
@@ -31,14 +33,15 @@ namespace VerifySymfHm
     protected OdbcConnection m_conn;
     protected string m_sConnStr;
     protected int m_idDwMin;
+    protected NameValueCollection m_seti;
 
     public VerifySymfHm()
     {
       Console.WriteLine("VerifySymfHm, licensed with GNU GPL 3.0, (c) 2016 bonsoft.pl");
       Console.WriteLine("VerifySymfHm, start " + DateTime.Now);
-      var seti = System.Configuration.ConfigurationManager.AppSettings;
-      m_sConnStr = seti["ConnectionString"].ToString();
-      m_idDwMin = Int32.Parse(seti["MinIdDw"]);
+      m_seti = ConfigurationManager.AppSettings;
+      m_sConnStr = m_seti["ConnectionString"].ToString();
+      m_idDwMin = Int32.Parse(m_seti["MinIdDw"]);
       m_conn = new OdbcConnection(m_sConnStr);
       m_conn.Open();
     }
@@ -74,7 +77,8 @@ namespace VerifySymfHm
     {
       var cmd = m_conn.CreateCommand();
       cmd.CommandTimeout = 60;
-      string sDataOd = DateTime.Now.Subtract(new TimeSpan(3, 0, 0, 0))
+      string sDataOd = DateTime.Now
+        .Subtract(new TimeSpan(Int32.Parse(m_seti["DaysBack"]), 0, 0, 0))
         .ToString("yyyy-MM-dd");
       cmd.CommandText = "select dw.kod as kodDw, mg.kod as kodWyd " +
         ", dw.data as dataDw, pw.wartosc / pw.ilosc as cenaPw " +
