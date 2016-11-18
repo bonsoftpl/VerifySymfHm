@@ -64,3 +64,8 @@ sytuację naprawić i nie ma żadnych negatywnych skutków.
 Procedura wykrywa stan, w których wartość początkowa dostawy
 nie jest równa wartości bieżącej, pomimo tego, że ilości
 początkowa i bieżąca są sobie równe.
+
+### Brak rekordów PW do MZ (`SprawdzCzyMzMajaPw`)
+
+Prawie każdy rekord MZ powinien mieć odpowiadający jeden
+lub więcej rekordów PW. Procedura wykrywa braki w tym zakresie.
