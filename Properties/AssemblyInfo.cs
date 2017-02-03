@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Bonsoft")]
 [assembly: AssemblyProduct("VerifySymfHm.Properties")]
-[assembly: AssemblyCopyright("(C) 2016 bonsoft@bonsoft.pl GNU GPL 3.0")]
+[assembly: AssemblyCopyright("(C) 2016-17 bonsoft@bonsoft.pl GNU GPL 3.0")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

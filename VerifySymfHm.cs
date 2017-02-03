@@ -1,6 +1,6 @@
 ﻿/*
 VerifySymfHm - weryfikator baz danych Sage Symfonia Handel
-Copyright (C) 2016, jaroslaw.czekalski@bonsoft.pl
+Copyright (C) 2016-17, jaroslaw.czekalski@bonsoft.pl
 https://github.com/bonsoftpl/VerifySymfHm
 
 This program is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@ namespace VerifySymfHm
 
     public VerifySymfHm()
     {
-      Console.WriteLine("VerifySymfHm, licensed with GNU GPL 3.0, (c) 2016 bonsoft.pl");
+      Console.WriteLine("VerifySymfHm, licensed with GNU GPL 3.0, (c) 2016-17 bonsoft.pl");
       Console.WriteLine("VerifySymfHm, start " + DateTime.Now);
       m_seti = ConfigurationManager.AppSettings;
       m_sConnStr = m_seti["ConnectionString"].ToString();
