@@ -69,3 +69,8 @@ początkowa i bieżąca są sobie równe.
 
 Prawie każdy rekord MZ powinien mieć odpowiadający jeden
 lub więcej rekordów PW. Procedura wykrywa braki w tym zakresie.
+
+### Różnica w wartości pomiędzy PW a MZ (`SprawdzWartMzPw`)
+
+Suma wartości rekordów PW dla danego rekordu MZ powinna się zgadzać.
+Wykrywamy różnice.

@@ -46,6 +46,46 @@ namespace VerifySymfHm
       m_conn.Open();
     }
 
+    protected int DajMinIdMzDlaDaty(string sDataOd)
+    {
+      /* Nie potrafię tego zrobić w jednym query z subquery, bo w poniższym
+       * query pervasive nie przyjmuje wewnętrznego order by
+       * Dlatego rozbijam na 2 zapytania.
+      select top 1 imz1.id from imz imz1 where imz1.data = (
+        select top 1 imz2.data from imz imz2
+        where imz2.data < '2017-01-24'
+        order by imz2.data
+      )
+      order by imz1.id
+      */
+
+      var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
+      cmd.CommandText = "select top 1 data from imz " +
+        "  where data < '" + sDataOd + "' " +
+        "  order by data desc ";
+      var rs = cmd.ExecuteReader();
+      string sDataPrzed = "";
+      if (rs.Read())
+        sDataPrzed = rs["data"].ToString();
+      cmd.Dispose();
+      if (sDataPrzed == "")
+        return 0;
+
+      cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
+      cmd.CommandText = "select top 1 id from imz " +
+        "with (index(\"idx_data\")) " +
+        "where data = '" + sDataPrzed + "' " +
+        "order by id ";
+      rs = cmd.ExecuteReader();
+      int id = 0;
+      if (rs.Read())
+        id = (int)rs["id"];
+      cmd.Dispose();
+      return id;
+    }
+
     protected void SprawdzWartNowychDostaw()
     {
       var cmd = m_conn.CreateCommand();
@@ -132,6 +172,40 @@ namespace VerifySymfHm
       cmd.Dispose();
     }
 
+    protected void SprawdzWartMzPw()
+    {
+      string sDataOd = DateTime.Now
+        .Subtract(new TimeSpan(Int32.Parse(m_seti["DaysBack"]), 0, 0, 0))
+        .ToString("yyyy-MM-dd");
+      int idMz = DajMinIdMzDlaDaty(sDataOd);
+      var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
+      cmd.CommandText = "select mz1.id as idMz, mg.kod as kodMg, " +
+        "mz1.data as data, mz1.wartNetto as wartMz, " +
+        "tw.kod as kodTow, " +
+        "round(sum(pw3.wartosc), 2) as roznica " +
+        "from mz mz1 " +
+        "left join tw on tw.id = mz1.idtw " +
+        "left join mg on mg.id = mz1.super " +
+        "left join pw pw3 on pw3.typi = 37 and pw3.idmg = mz1.id " +
+        "where mz1.typi <> 1 " +
+        "and mz1.id > " + idMz +
+        "and " +
+        "( " +
+        "  select round(sum(pw1.wartosc), 2) " +
+        "  from pw pw1 " +
+        "  where pw1.typi = 37 and pw1.idmg = mz1.id " +
+        ") <> round(mz1.wartNetto, 2) " +
+        "group by mz1.id, mg.kod, mz1.data, mz1.wartNetto, tw.kod ";
+      var rs = cmd.ExecuteReader();
+      while (rs.Read()) {
+        Console.WriteLine(String.Format("SprawdzWartMzPw: niezgodnosc w " +
+          "dok. mag. {0} ({1}), towar {2} (mz:{3}), na kwote {4}",
+          rs["kodMg"], rs["data"], rs["kodTow"], rs["idMz"], rs["roznica"]));
+      }
+      cmd.Dispose();
+    }
+
     public void Close()
     {
       m_conn.Close();
@@ -144,6 +218,7 @@ namespace VerifySymfHm
       c.SprawdzWartNowychDostaw();
       c.SprawdzCenyWydanZDostaw();
       c.SprawdzCzyMzMajaPw();
+      c.SprawdzWartMzPw();
       c.Close();
     }
   }
