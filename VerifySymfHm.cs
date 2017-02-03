@@ -49,7 +49,7 @@ namespace VerifySymfHm
     protected void SprawdzWartNowychDostaw()
     {
       var cmd = m_conn.CreateCommand();
-      cmd.CommandTimeout = 60;
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
       cmd.CommandText = "select " +
         "dw.kod as kodDw, dw.data as data, tw.kod as kodTow " +
         ", wartoscDoSp, wartoscSt, ilosc, iloscpz, dw.stan " +
@@ -76,7 +76,7 @@ namespace VerifySymfHm
     protected void SprawdzCenyWydanZDostaw()
     {
       var cmd = m_conn.CreateCommand();
-      cmd.CommandTimeout = 60;
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
       string sDataOd = DateTime.Now
         .Subtract(new TimeSpan(Int32.Parse(m_seti["DaysBack"]), 0, 0, 0))
         .ToString("yyyy-MM-dd");
@@ -105,7 +105,7 @@ namespace VerifySymfHm
     protected void SprawdzCzyMzMajaPw()
     {
       var cmd = m_conn.CreateCommand();
-      cmd.CommandTimeout = 60;
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
       string sDataOd = DateTime.Now
         .Subtract(new TimeSpan(Int32.Parse(m_seti["DaysBack"]), 0, 0, 0))
         .ToString("yyyy-MM-dd");
