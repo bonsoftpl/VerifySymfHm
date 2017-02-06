@@ -183,7 +183,7 @@ namespace VerifySymfHm
       cmd.CommandText = "select mz1.id as idMz, mg.kod as kodMg, " +
         "mz1.data as data, mz1.wartNetto as wartMz, " +
         "tw.kod as kodTow, " +
-        "round(sum(pw3.wartosc), 2) as roznica " +
+        "round(sum(pw3.wartosc) - mz1.wartNetto, 2) as roznica " +
         "from mz mz1 " +
         "left join tw on tw.id = mz1.idtw " +
         "left join mg on mg.id = mz1.super " +
