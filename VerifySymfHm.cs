@@ -23,6 +23,7 @@ using System.Collections.Specialized;
 using System.Configuration;
 using System.Data.Odbc;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,7 +38,9 @@ namespace VerifySymfHm
 
     public VerifySymfHm()
     {
-      Console.WriteLine("VerifySymfHm, licensed with GNU GPL 3.0, (c) 2016-17 bonsoft.pl");
+      Console.WriteLine("VerifySymfHm " +
+        Assembly.GetExecutingAssembly().GetName().Version.ToString() +
+        ", licensed with GNU GPL 3.0, (c) 2016-17 bonsoft.pl");
       Console.WriteLine("VerifySymfHm, start " + DateTime.Now);
       m_seti = ConfigurationManager.AppSettings;
       m_sConnStr = m_seti["ConnectionString"].ToString();
@@ -158,6 +161,8 @@ namespace VerifySymfHm
         "and mz.id is not null and pw.id is null " +
         // anulowane nas nie interesują
         "and mg.subtypi <> 0 " +
+        // pozycje kompletow nie maja pw
+        "and (mz.flag & 4096) = 0 " +
         // niektóre pozycje są naprawdę zerowe i ich się nie czepiamy
         "and not ((mz.ilosc between - 0.0001 and 0.0001) " +
         "         and (mz.cena between - 0.001 and 0.001)) ";
