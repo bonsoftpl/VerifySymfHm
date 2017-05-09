@@ -23,6 +23,8 @@ using System.Collections.Specialized;
 using System.Configuration;
 using System.Data.Odbc;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,12 +37,20 @@ namespace VerifySymfHm
     protected string m_sConnStr;
     protected int m_idDwMin;
     protected NameValueCollection m_seti;
+    protected StringBuilder m_sbOut;
+
+    public void WriteLine(string s)
+    {
+      m_sbOut.AppendLine(s);
+      Console.WriteLine(s);
+    }
 
     public VerifySymfHm()
     {
       Console.WriteLine("VerifySymfHm " +
         Assembly.GetExecutingAssembly().GetName().Version.ToString() +
         ", licensed with GNU GPL 3.0, (c) 2016-17 bonsoft.pl");
+      m_sbOut = new StringBuilder();
       Console.WriteLine("VerifySymfHm, start " + DateTime.Now);
       m_seti = ConfigurationManager.AppSettings;
       m_sConnStr = m_seti["ConnectionString"].ToString();
@@ -107,7 +117,7 @@ namespace VerifySymfHm
       var rs = cmd.ExecuteReader();
       //Console.WriteLine(cmd.CommandText);
       while (rs.Read()) {
-        Console.WriteLine(String.Format("Dostawa {0} (id {6}) z dnia {1}, " +
+        WriteLine(String.Format("Dostawa {0} (id {6}) z dnia {1}, " +
           "towar {2}, " +
           "mag {5}, ma wart. pocz. {3}, a obecną {4}.", rs["kodDw"], rs["data"],
           rs["kodTow"], rs["wartoscDoSp"], rs["wartoscSt"], rs["mag"],
@@ -137,7 +147,7 @@ namespace VerifySymfHm
       var rs = cmd.ExecuteReader();
       //Console.WriteLine(cmd.CommandText);
       while (rs.Read()) {
-        Console.WriteLine(String.Format("Wydanie {0} ({2}, id {6}) z dostawy {1} " +
+        WriteLine(String.Format("Wydanie {0} ({2}, id {6}) z dostawy {1} " +
           "ma bledna cene (pw={3}, dw={4}), towar {5}.",
           rs["kodWyd"], rs["kodDw"], rs["dataDw"], rs["cenaPw"], rs["cenaDw"],
           rs["kodTow"], rs["idPw"]));
@@ -170,7 +180,7 @@ namespace VerifySymfHm
       //Console.WriteLine(cmd.CommandText);
       while (rs.Read())
       {
-        Console.WriteLine(String.Format("W dok. mag. {0} ({1}) " +
+        WriteLine(String.Format("W dok. mag. {0} ({1}) " +
           "brakuje pw do pozycji {2} (mz:{3}) ",
           rs["kodMg"], rs["data"], rs["kodTow"], rs["idMz"]));
       }
@@ -204,7 +214,7 @@ namespace VerifySymfHm
         "group by mz1.id, mg.kod, mz1.data, mz1.wartNetto, tw.kod ";
       var rs = cmd.ExecuteReader();
       while (rs.Read()) {
-        Console.WriteLine(String.Format("SprawdzWartMzPw: niezgodnosc w " +
+        WriteLine(String.Format("SprawdzWartMzPw: niezgodnosc w " +
           "dok. mag. {0} ({1}), towar {2} (mz:{3}), na kwote {4}",
           rs["kodMg"], rs["data"], rs["kodTow"], rs["idMz"], rs["roznica"]));
       }
@@ -217,6 +227,28 @@ namespace VerifySymfHm
       Console.WriteLine("VerifySymfHm, end " + DateTime.Now);
     }
 
+    public void SendReport()
+    {
+      if (m_sbOut.Length > 0 && m_seti["SmtpHost"] != null) {
+        var mail = new MailMessage(
+          m_seti["MailFrom"].ToString(),
+          m_seti["MailTo"].ToString(),
+          "Prawdopodobne błędy w bazie Symfonia Handel",
+          m_sbOut.ToString()
+        );
+        var smtp = new SmtpClient(m_seti["SmtpHost"]);
+        if (m_seti["SmtpPort"] != null)
+          smtp.Port = Int32.Parse(m_seti["SmtpPort"].ToString());
+        if (m_seti["SmtpPass"] != null) {
+          smtp.Credentials = new NetworkCredential(
+            m_seti["SmtpUser"].ToString(), m_seti["SmtpPass"].ToString()
+          );
+          smtp.EnableSsl = true;
+        }
+        smtp.Send(mail);
+      }
+    }
+
     static void Main(string[] args)
     {
       var c = new VerifySymfHm();
@@ -225,6 +257,8 @@ namespace VerifySymfHm
       c.SprawdzCzyMzMajaPw();
       c.SprawdzWartMzPw();
       c.Close();
+      c.m_sbOut.AppendLine("hello");
+      c.SendReport();
     }
   }
 }
