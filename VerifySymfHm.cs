@@ -25,7 +25,9 @@ using System.Data.Odbc;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Security;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -252,9 +254,16 @@ namespace VerifySymfHm
           smtp.Credentials = new NetworkCredential(
             m_seti["SmtpUser"].ToString(), m_seti["SmtpPass"].ToString()
           );
-        smtp.EnableSsl = true;
-        if (m_seti["SmtpSsl"] != null)
-          smtp.EnableSsl = Boolean.Parse(m_seti["SmtpSsl"].ToString());
+        smtp.EnableSsl = GetSetting(m_seti, "SmtpSsl", true);
+
+        if (GetSetting(m_seti, "SmtpSslIgnoreErrors", false)) {
+          // Switch of ssl invalid certificate error, like in
+          // https://stackoverflow.com/a/1386568/772981
+          ServicePointManager.ServerCertificateValidationCallback =
+            delegate (object s, X509Certificate certificate,
+             X509Chain chain, SslPolicyErrors sslPolicyErrors) {
+               return true; };
+        }
 
         m_seti.AllKeys.Where(k => k.StartsWith("MailCC"))
         .ToList().ForEach(k => {
@@ -265,8 +274,19 @@ namespace VerifySymfHm
 
         Console.WriteLine("done.");
       } else {
-        Console.WriteLine("SmtpHost not set, so not sending any emails.");
+        if (m_sbOut.Length > 0)
+          Console.WriteLine("SmtpHost not set, so not sending any emails.");
       }
+    }
+
+    private T GetSetting<T>(NameValueCollection seti,
+      string sKey, T defaultValue)
+    {
+      T v = defaultValue;
+      if (seti[sKey] != null)
+        v = (T)Convert.ChangeType(seti[sKey].ToString(),
+          Convert.GetTypeCode(v));
+      return v;
     }
 
     static void Main(string[] args)
