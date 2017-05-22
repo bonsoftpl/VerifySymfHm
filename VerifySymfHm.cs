@@ -229,23 +229,41 @@ namespace VerifySymfHm
 
     public void SendReport()
     {
+      string sSubj = "Prawdopodobne błędy w bazie Symfonia Handel";
+      string sBody = "Poniższe błędy czasem wynikają z niedoskonałości "
+        + "procedur diagnostycznych. Na przykład po korekcie przyjęcia "
+        + "program wykazuje niezgodności na cenach wydań."
+        + Environment.NewLine + Environment.NewLine;
+      sBody += m_sbOut.ToString();
+      if (m_seti["OkreslenieBazy"] != null)
+        sSubj += " " + m_seti["OkreslenieBazy"].ToString();
       if (m_sbOut.Length > 0 && m_seti["SmtpHost"] != null) {
+        Console.Write("Sending email...");
         var mail = new MailMessage(
           m_seti["MailFrom"].ToString(),
           m_seti["MailTo"].ToString(),
-          "Prawdopodobne błędy w bazie Symfonia Handel",
-          m_sbOut.ToString()
+          sSubj,
+          sBody
         );
         var smtp = new SmtpClient(m_seti["SmtpHost"]);
         if (m_seti["SmtpPort"] != null)
           smtp.Port = Int32.Parse(m_seti["SmtpPort"].ToString());
-        if (m_seti["SmtpPass"] != null) {
+        if (m_seti["SmtpPass"] != null)
           smtp.Credentials = new NetworkCredential(
             m_seti["SmtpUser"].ToString(), m_seti["SmtpPass"].ToString()
           );
-          smtp.EnableSsl = true;
-        }
+        smtp.EnableSsl = true;
+        if (m_seti["SmtpSsl"] != null)
+          smtp.EnableSsl = Boolean.Parse(m_seti["SmtpSsl"].ToString());
+
+        m_seti.AllKeys.Where(k => k.StartsWith("MailCC"))
+        .ToList().ForEach(k => {
+          mail.CC.Add(m_seti[k]);
+        });
+
         smtp.Send(mail);
+
+        Console.WriteLine("done.");
       }
     }
 
@@ -257,7 +275,6 @@ namespace VerifySymfHm
       c.SprawdzCzyMzMajaPw();
       c.SprawdzWartMzPw();
       c.Close();
-      c.m_sbOut.AppendLine("hello");
       c.SendReport();
     }
   }
