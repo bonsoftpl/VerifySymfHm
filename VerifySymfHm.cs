@@ -238,7 +238,7 @@ namespace VerifySymfHm
       if (m_seti["OkreslenieBazy"] != null)
         sSubj += " " + m_seti["OkreslenieBazy"].ToString();
       if (m_sbOut.Length > 0 && m_seti["SmtpHost"] != null) {
-        Console.Write("Sending email...");
+        Console.Write("Sending email, beacuse SmtpHost is set...");
         var mail = new MailMessage(
           m_seti["MailFrom"].ToString(),
           m_seti["MailTo"].ToString(),
@@ -264,6 +264,8 @@ namespace VerifySymfHm
         smtp.Send(mail);
 
         Console.WriteLine("done.");
+      } else {
+        Console.WriteLine("SmtpHost not set, so not sending any emails.");
       }
     }
 
