@@ -101,6 +101,26 @@ namespace VerifySymfHm
       return id;
     }
 
+    protected int DajMinIdPwDlaDaty(string sDataOd)
+    {
+      int idMz = DajMinIdMzDlaDaty(sDataOd);
+      int idPw = 0;
+      
+      var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
+      cmd.CommandText = "select top 1 id from pw " +
+        "  where typi = 37 and idmg = " + idMz;
+      var rs = cmd.ExecuteReader();
+      if (rs.Read())
+        idPw = rs.GetInt32(0);
+      cmd.Dispose();
+
+      if (idPw == 0)
+        m_sbOut.AppendLine("Nie udało się pobrać idPw min.");
+
+      return idPw;
+    }
+
     protected void SprawdzWartNowychDostaw()
     {
       var cmd = m_conn.CreateCommand();
@@ -223,6 +243,30 @@ namespace VerifySymfHm
       cmd.Dispose();
     }
 
+    protected void SprawdzWiszaceRezerwacje()
+    {
+      string sDataOd = DateTime.Now
+        .Subtract(new TimeSpan(Int32.Parse(m_seti["DaysBack"]), 0, 0, 0))
+        .ToString("yyyy-MM-dd");
+      var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
+      cmd.CommandText =
+        "select tw.kod as kodTow, dw.kod as kodDw from pw " +
+        "left join tw on pw.idtw = tw.id " +
+        "left join dw on pw.iddw = dw.id " +
+        "where pw.typi = 26 " +
+        "and not exists ( " +
+        "  select id from zz where zz.id = pw.idmg " +
+        ") ";
+      var rs = cmd.ExecuteReader();
+      while (rs.Read()) {
+        WriteLine(String.Format("SprawdzWiszaceRezerwacje: " +
+          "towar {0}, dostawa {1}",
+          rs["kodTow"], rs["kodDw"]));
+      }
+      cmd.Dispose();
+    }
+
     public void Close()
     {
       m_conn.Close();
@@ -296,6 +340,7 @@ namespace VerifySymfHm
       c.SprawdzCenyWydanZDostaw();
       c.SprawdzCzyMzMajaPw();
       c.SprawdzWartMzPw();
+      c.SprawdzWiszaceRezerwacje();
       c.Close();
       c.SendReport();
     }
