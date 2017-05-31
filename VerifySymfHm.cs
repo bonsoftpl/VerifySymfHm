@@ -109,12 +109,13 @@ namespace VerifySymfHm
 
     private void DumpSqlMaybe(OdbcCommand cmd)
     {
+      if (!m_bDebug)
+        return;
       new StackTrace(1).GetFrames().Take(1).ToList().ForEach(it => {
         Console.WriteLine(it.ToString());
       });
-      if (!m_bDebug)
-        return;
       Console.WriteLine("executing " + cmd.CommandText);
+      Console.WriteLine();
     }
 
     protected int DajMinIdPwDlaDaty(string sDataOd)
@@ -305,7 +306,9 @@ namespace VerifySymfHm
       sBody += m_sbOut.ToString();
       if (m_seti["OkreslenieBazy"] != null)
         sSubj += " " + m_seti["OkreslenieBazy"].ToString();
-      if (m_sbOut.Length > 0 && m_seti["SmtpHost"] != null) {
+      bool bSend = m_sbOut.Length > 0
+                   || GetSetting(m_seti, "ForceEmail", false);
+      if (bSend && m_seti["SmtpHost"] != null) {
         Console.Write("Sending email, beacuse SmtpHost is set...");
         var mail = new MailMessage(
           m_seti["MailFrom"].ToString(),
