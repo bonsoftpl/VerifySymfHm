@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.Data.Odbc;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
@@ -29,6 +30,7 @@ using System.Net.Security;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace VerifySymfHm
@@ -40,6 +42,7 @@ namespace VerifySymfHm
     protected int m_idDwMin;
     protected NameValueCollection m_seti;
     protected StringBuilder m_sbOut;
+    protected bool m_bDebug;
 
     public void WriteLine(string s)
     {
@@ -55,6 +58,7 @@ namespace VerifySymfHm
       m_sbOut = new StringBuilder();
       Console.WriteLine("VerifySymfHm, start " + DateTime.Now);
       m_seti = ConfigurationManager.AppSettings;
+      m_bDebug = GetSetting(m_seti, "Debug", false);
       m_sConnStr = m_seti["ConnectionString"].ToString();
       m_idDwMin = Int32.Parse(m_seti["MinIdDw"]);
       m_conn = new OdbcConnection(m_sConnStr);
@@ -79,6 +83,7 @@ namespace VerifySymfHm
       cmd.CommandText = "select top 1 data from imz " +
         "  where data < '" + sDataOd + "' " +
         "  order by data desc ";
+      DumpSqlMaybe(cmd);
       var rs = cmd.ExecuteReader();
       string sDataPrzed = "";
       if (rs.Read())
@@ -93,12 +98,23 @@ namespace VerifySymfHm
         "with (index(\"idx_data\")) " +
         "where data = '" + sDataPrzed + "' " +
         "order by id ";
+      DumpSqlMaybe(cmd);
       rs = cmd.ExecuteReader();
       int id = 0;
       if (rs.Read())
         id = (int)rs["id"];
       cmd.Dispose();
       return id;
+    }
+
+    private void DumpSqlMaybe(OdbcCommand cmd)
+    {
+      new StackTrace(1).GetFrames().Take(1).ToList().ForEach(it => {
+        Console.WriteLine(it.ToString());
+      });
+      if (!m_bDebug)
+        return;
+      Console.WriteLine("executing " + cmd.CommandText);
     }
 
     protected int DajMinIdPwDlaDaty(string sDataOd)
@@ -110,6 +126,7 @@ namespace VerifySymfHm
       cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
       cmd.CommandText = "select top 1 id from pw " +
         "  where typi = 37 and idmg = " + idMz;
+      DumpSqlMaybe(cmd);
       var rs = cmd.ExecuteReader();
       if (rs.Read())
         idPw = rs.GetInt32(0);
@@ -136,6 +153,7 @@ namespace VerifySymfHm
         "and round(dw.wartoscDoSp, 2) <> round(dw.wartoscSt, 2) " +
         "and round(dw.ilosc, 3) = round(dw.iloscpz, 3) " +
         "and round(dw.ilosc, 3) = round(dw.stan, 3) ";
+      DumpSqlMaybe(cmd);
       var rs = cmd.ExecuteReader();
       //Console.WriteLine(cmd.CommandText);
       while (rs.Read()) {
@@ -166,6 +184,7 @@ namespace VerifySymfHm
         "where pw.typi = 37 and pw.data >= '" + sDataOd + "' " +
         "and not pw.ilosc between -0.9 and 0.9 " +
         "and not pw.wartosc / pw.ilosc - dw.cena between - 0.2 and 0.2 ";
+      DumpSqlMaybe(cmd);
       var rs = cmd.ExecuteReader();
       //Console.WriteLine(cmd.CommandText);
       while (rs.Read()) {
@@ -198,6 +217,7 @@ namespace VerifySymfHm
         // niektóre pozycje są naprawdę zerowe i ich się nie czepiamy
         "and not ((mz.ilosc between - 0.0001 and 0.0001) " +
         "         and (mz.cena between - 0.001 and 0.001)) ";
+      DumpSqlMaybe(cmd);
       var rs = cmd.ExecuteReader();
       //Console.WriteLine(cmd.CommandText);
       while (rs.Read())
@@ -234,6 +254,7 @@ namespace VerifySymfHm
         "  where pw1.typi = 37 and pw1.idmg = mz1.id " +
         ") <> round(mz1.wartNetto, 2) " +
         "group by mz1.id, mg.kod, mz1.data, mz1.wartNetto, tw.kod ";
+      DumpSqlMaybe(cmd);
       var rs = cmd.ExecuteReader();
       while (rs.Read()) {
         WriteLine(String.Format("SprawdzWartMzPw: niezgodnosc w " +
@@ -258,6 +279,7 @@ namespace VerifySymfHm
         "and not exists ( " +
         "  select id from zz where zz.id = pw.idmg " +
         ") ";
+      DumpSqlMaybe(cmd);
       var rs = cmd.ExecuteReader();
       while (rs.Read()) {
         WriteLine(String.Format("SprawdzWiszaceRezerwacje: " +
