@@ -317,6 +317,7 @@ namespace VerifySymfHm
           sBody
         );
         var smtp = new SmtpClient(m_seti["SmtpHost"]);
+        smtp.Timeout = 10000;
         if (m_seti["SmtpPort"] != null)
           smtp.Port = Int32.Parse(m_seti["SmtpPort"].ToString());
         if (m_seti["SmtpPass"] != null)
