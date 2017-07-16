@@ -167,6 +167,27 @@ namespace VerifySymfHm
       cmd.Dispose();
     }
 
+    protected void WypiszKorektyCenDoDw(int iddw)
+    {
+      var cmd = m_conn.CreateCommand();
+      cmd.CommandTimeout = Int32.Parse(m_seti["Timeout"].ToString());
+      cmd.CommandText = "select mg.kod as kodPzk " +
+        ", pw.wartosc as wartosc, mz.cena as cena " +
+        "from pw " +
+        "left join mz on pw.idmg = mz.id " +
+        "left join mg on mz.super = mg.id " +
+        "where pw.typi = 37 and pw.iddw = " + iddw + " " +
+        "and pw.subtypi = 89 and pw.flag in (16, 20) ";
+      DumpSqlMaybe(cmd);
+      var rs = cmd.ExecuteReader();
+      while (rs.Read()) {
+        WriteLine(String.Format("Ale jest korekta ceny {0} "
+          + " na kwotę {1} (cena {2}?).",
+          rs["kodPzk"], rs["wartosc"], rs["cena"]));
+      }
+      cmd.Dispose();
+    }
+
     protected void SprawdzCenyWydanZDostaw()
     {
       var cmd = m_conn.CreateCommand();
@@ -177,6 +198,7 @@ namespace VerifySymfHm
       cmd.CommandText = "select dw.kod as kodDw, mg.kod as kodWyd " +
         ", dw.data as dataDw, pw.wartosc / pw.ilosc as cenaPw " +
         ", dw.cena as cenaDw, tw.kod as kodTow, pw.id as idPw " +
+        ", dw.id as idDw " +
         "from pw " +
         "left join dw on pw.iddw = dw.id " +
         "left join tw on pw.idtw = tw.id " +
@@ -189,10 +211,12 @@ namespace VerifySymfHm
       var rs = cmd.ExecuteReader();
       //Console.WriteLine(cmd.CommandText);
       while (rs.Read()) {
-        WriteLine(String.Format("Wydanie {0} ({2}, id {6}) z dostawy {1} " +
+        WriteLine(String.Format("Wydanie {0} ({2}, id {6}) " +
+          "z dostawy {1} (iddw={7}) " +
           "ma bledna cene (pw={3}, dw={4}), towar {5}.",
           rs["kodWyd"], rs["kodDw"], rs["dataDw"], rs["cenaPw"], rs["cenaDw"],
-          rs["kodTow"], rs["idPw"]));
+          rs["kodTow"], rs["idPw"], rs["idDw"]));
+        WypiszKorektyCenDoDw(Convert.ToInt32(rs["idDw"]));
       }
       cmd.Dispose();
     }
