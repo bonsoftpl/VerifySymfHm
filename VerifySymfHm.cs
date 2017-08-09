@@ -195,6 +195,7 @@ namespace VerifySymfHm
       string sDataOd = DateTime.Now
         .Subtract(new TimeSpan(Int32.Parse(m_seti["DaysBack"]), 0, 0, 0))
         .ToString("yyyy-MM-dd");
+      //TODO niepotrzebnie wykazuje przyjecia, ktore byly korygowane.
       cmd.CommandText = "select dw.kod as kodDw, mg.kod as kodWyd " +
         ", dw.data as dataDw, pw.wartosc / pw.ilosc as cenaPw " +
         ", dw.cena as cenaDw, tw.kod as kodTow, pw.id as idPw " +
@@ -217,6 +218,11 @@ namespace VerifySymfHm
           rs["kodWyd"], rs["kodDw"], rs["dataDw"], rs["cenaPw"], rs["cenaDw"],
           rs["kodTow"], rs["idPw"], rs["idDw"]));
         WypiszKorektyCenDoDw(Convert.ToInt32(rs["idDw"]));
+        /* Przy korektach jest trudno, bo wydanie może nastąpić przed
+           korekta lub po korekcie. W pierwszym przypadku cena w dw
+           uwzglednia korekte, a w wydaniu - nie. No i drugi przypadek
+           jest odwrotny, w zasadzie teraz jest on dobrze rozpatrywany.
+         */
       }
       cmd.Dispose();
     }
